@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/csv"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -12,17 +11,6 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 )
-
-type Entry struct {
-	Title   string `json:"title"`
-	Link    string `json:"link"`
-	Snippet string `json:"snippet"`
-}
-
-type State struct {
-	Name    string
-	Entries []Entry
-}
 
 var stateList = []string{
 	"Alabama",
@@ -78,27 +66,6 @@ var stateList = []string{
 }
 
 const dir = "states/"
-
-func createJson(entries []Entry) {
-
-	// Create json file to save results
-	file, err := os.Create("data.json")
-	if err != nil {
-		panic(err)
-	}
-	defer file.Close()
-
-	data := map[string]interface{}{
-		"stateName": entries,
-	}
-
-	encoder := json.NewEncoder(file)
-	encoder.SetIndent("", "  ")
-	err = encoder.Encode(data)
-	if err != nil {
-		panic(err)
-	}
-}
 
 func createCsv(filename string, rows [][]string) {
 
