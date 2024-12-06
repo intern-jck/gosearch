@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -79,34 +80,6 @@ var stateList = []string{
 
 const dir = "states/"
 
-// Takes a state as param, returns Google search results
-func searchForMakerspace(query string) (*goquery.Document, error) {
-
-	// q := strings.ToLower(query)
-	// q = strings.Replace(q, " ", "+", -1)
-
-	url := "https://www.google.com/search?q=makerspace" + query + "&gl=us&hl=en&num=100"
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36")
-	client := &http.Client{}
-	res, err := client.Do(req)
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer res.Body.Close()
-
-	// doc, err := goquery.NewDocumentFromReader(res.Body)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-
-	return goquery.NewDocumentFromReader(res.Body)
-}
-
 func createJson(entries []Entry) {
 
 	// Create json file to save results
@@ -161,7 +134,7 @@ func getMakerspaces(state string) {
 	s = strings.Replace(s, " ", "+", -1)
 
 	rows := [][]string{}
-	doc, err := searchForMakerspace(s)
+	doc, err := googleSearch("makerspace+"+s, 100)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -187,6 +160,34 @@ func getMakerspaces(state string) {
 	})
 
 	createCsv(s, rows)
+}
+
+// Takes a state as param, returns Google search results
+func googleSearch(query string, count int) (*goquery.Document, error) {
+
+	// q := strings.ToLower(query)
+	// q = strings.Replace(q, " ", "+", -1)
+
+	url := "https://www.google.com/search?q=" + query + "&gl=us&hl=en&num=" + strconv.Itoa(count)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36")
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer res.Body.Close()
+
+	// doc, err := goquery.NewDocumentFromReader(res.Body)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+
+	return goquery.NewDocumentFromReader(res.Body)
 }
 
 func main() {
