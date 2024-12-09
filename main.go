@@ -12,6 +12,8 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
+const dir = "states/"
+
 var stateList = []string{
 	"Alabama",
 	"Alaska",
@@ -64,8 +66,6 @@ var stateList = []string{
 	"Wisconsin",
 	"Wyoming",
 }
-
-const dir = "states/"
 
 func createCsv(filename string, rows [][]string) {
 
