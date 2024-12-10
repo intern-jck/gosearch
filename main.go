@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -13,6 +14,19 @@ import (
 )
 
 const dir = "states/"
+
+type Data struct {
+	Items []string `json:items`
+}
+
+type Space struct {
+	Name string
+	Link string
+}
+
+type StateList []Space
+
+type SpaceList map[string]StateList
 
 var stateList = []string{
 	"Alabama",
@@ -90,6 +104,108 @@ func createCsv(filename string, rows [][]string) {
 	}
 }
 
+func createJsonTest(filename string) {
+
+	file, err := os.ReadFile(filename)
+	if err != nil {
+		fmt.Println("json not found")
+	}
+
+	var data Data
+	// var state State
+
+	err = json.Unmarshal(file, &data)
+	if err != nil {
+		fmt.Println("invalid json")
+	}
+
+	data.Items = append(data.Items, "new item")
+	fmt.Println(data.Items)
+
+	updatedData, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		fmt.Println("updatedData error")
+	}
+
+	err = os.WriteFile(filename, updatedData, 0644)
+	if err != nil {
+		fmt.Println("json write error")
+	}
+}
+
+func createStateJson(filename string) {
+
+	var stateList StateList
+
+	// spaceList := make(map[string]StateList)
+
+	space1 := Space{
+		Name: "space 1",
+		Link: "www.space_1.com",
+	}
+
+	space2 := Space{
+		Name: "space 2",
+		Link: "www.space_2.com",
+	}
+
+	space3 := Space{
+		Name: "space 3",
+		Link: "www.space_3.com",
+	}
+
+	stateList = append(stateList, space1)
+	stateList = append(stateList, space2)
+	stateList = append(stateList, space3)
+
+	// fmt.Println(stateList)
+
+	// spaceList["state_1"] = stateList
+	// spaceList["state_2"] = stateList
+	// spaceList["state_3"] = stateList
+	// fmt.Println(spaceList)
+
+	file, err := os.Open(filename)
+	if err != nil {
+		fmt.Println("json not found")
+	}
+	defer file.Close()
+
+	var data map[string]interface{}
+
+	decoder := json.NewDecoder(file)
+	if err != nil {
+		fmt.Println("invalid json")
+	}
+
+	err = decoder.Decode(&data)
+	if err != nil {
+		fmt.Println("Error decoding JSON:", err)
+		return
+	}
+
+	// Print the map
+	fmt.Println(data)
+
+	// data.Items = append(data.Items, "new item")
+	// fmt.Println(data.Items)
+
+	data["state_1"] = stateList
+
+	fmt.Println(data)
+
+	updatedData, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		fmt.Println("updatedData error")
+	}
+
+	err = os.WriteFile(filename, updatedData, 0644)
+
+	if err != nil {
+		fmt.Println("json write error")
+	}
+}
+
 func getMakerspaces(state string) {
 	s := strings.ToLower(state)
 	s = strings.Replace(s, " ", "+", -1)
@@ -136,8 +252,11 @@ func googleSearch(query string, count int) (*goquery.Document, error) {
 func main() {
 	fmt.Println("Go Google Search Scraper")
 
-	for i, state := range stateList {
-		fmt.Println(i, state)
-		getMakerspaces(state)
-	}
+	// for i, state := range stateList {
+	// 	fmt.Println(i, state)
+	// 	getMakerspaces(state)
+	// }
+
+	// createJsonTest("state.json")
+	createStateJson("state.json")
 }

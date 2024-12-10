@@ -1,0 +1,30 @@
+{
+  "state_1": [
+    {
+      "Name": "space 1",
+      "Link": "www.space_1.com"
+    },
+    {
+      "Name": "space 2",
+      "Link": "www.space_2.com"
+    },
+    {
+      "Name": "space 3",
+      "Link": "www.space_3.com"
+    }
+  ],
+  "state_2": [
+    {
+      "Link": "www.space_1.com",
+      "Name": "space 1"
+    },
+    {
+      "Link": "www.space_2.com",
+      "Name": "space 2"
+    },
+    {
+      "Link": "www.space_3.com",
+      "Name": "space 3"
+    }
+  ]
+}
