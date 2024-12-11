@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -20,13 +21,12 @@ type Data struct {
 }
 
 type Space struct {
-	Name string
-	Link string
+	Name    string
+	Link    string
+	Snippet string
 }
 
-type StateList []Space
-
-type SpaceList map[string]StateList
+type SpaceList []Space
 
 var stateList = []string{
 	"Alabama",
@@ -133,41 +133,12 @@ func createJsonTest(filename string) {
 	}
 }
 
-func createStateJson(filename string) {
-
-	var stateList StateList
-
-	// spaceList := make(map[string]StateList)
-
-	space1 := Space{
-		Name: "space 1",
-		Link: "www.space_1.com",
-	}
-
-	space2 := Space{
-		Name: "space 2",
-		Link: "www.space_2.com",
-	}
-
-	space3 := Space{
-		Name: "space 3",
-		Link: "www.space_3.com",
-	}
-
-	stateList = append(stateList, space1)
-	stateList = append(stateList, space2)
-	stateList = append(stateList, space3)
-
-	// fmt.Println(stateList)
-
-	// spaceList["state_1"] = stateList
-	// spaceList["state_2"] = stateList
-	// spaceList["state_3"] = stateList
-	// fmt.Println(spaceList)
+func createStateJson(state string, spaceList SpaceList, filename string) {
 
 	file, err := os.Open(filename)
 	if err != nil {
 		fmt.Println("json not found")
+		return
 	}
 	defer file.Close()
 
@@ -176,6 +147,7 @@ func createStateJson(filename string) {
 	decoder := json.NewDecoder(file)
 	if err != nil {
 		fmt.Println("invalid json")
+		return
 	}
 
 	err = decoder.Decode(&data)
@@ -184,25 +156,18 @@ func createStateJson(filename string) {
 		return
 	}
 
-	// Print the map
-	fmt.Println(data)
-
-	// data.Items = append(data.Items, "new item")
-	// fmt.Println(data.Items)
-
-	data["state_1"] = stateList
-
-	fmt.Println(data)
+	data[state] = spaceList
 
 	updatedData, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
 		fmt.Println("updatedData error")
+		return
 	}
 
 	err = os.WriteFile(filename, updatedData, 0644)
-
 	if err != nil {
 		fmt.Println("json write error")
+		return
 	}
 }
 
@@ -211,6 +176,8 @@ func getMakerspaces(state string) {
 	s = strings.Replace(s, " ", "+", -1)
 
 	rows := [][]string{}
+	var spaceList SpaceList
+
 	doc, err := googleSearch("makerspace+"+s, 100)
 	if err != nil {
 		fmt.Println(err)
@@ -224,9 +191,18 @@ func getMakerspaces(state string) {
 
 		row := []string{title, link, s[0]}
 		rows = append(rows, row)
+
+		space := Space{
+			Name:    title,
+			Link:    link,
+			Snippet: s[0],
+		}
+
+		spaceList = append(spaceList, space)
 	})
 
-	createCsv(s, rows)
+	createStateJson(state, spaceList, "state.json")
+
 }
 
 // Takes a state as param, returns Google search results
@@ -238,6 +214,8 @@ func googleSearch(query string, count int) (*goquery.Document, error) {
 		fmt.Println(err)
 	}
 
+	fmt.Println(url)
+
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36")
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -246,17 +224,18 @@ func googleSearch(query string, count int) (*goquery.Document, error) {
 	}
 	defer res.Body.Close()
 
-	return goquery.NewDocumentFromReader(res.Body)
+	doc, err := goquery.NewDocumentFromReader(res.Body)
+
+	return doc, err
 }
 
 func main() {
 	fmt.Println("Go Google Search Scraper")
 
-	// for i, state := range stateList {
-	// 	fmt.Println(i, state)
-	// 	getMakerspaces(state)
-	// }
+	for i, state := range stateList {
+		fmt.Println(i, state)
+		getMakerspaces(state)
+		time.Sleep(10 * time.Second)
+	}
 
-	// createJsonTest("state.json")
-	createStateJson("state.json")
 }
